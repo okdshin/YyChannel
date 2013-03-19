@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block script %}
+<script type="text/javascript" src={{ url_for('static', filename='jquery-1.9.1.min.js')}}></script>
+<script type="text/javascript" src={{ url_for('static', filename='jquery.upload-1.0.2.min.js')}}></script>
+<script type="text/javascript">
+	$(function() {
+		$('#upload_button').click(function(){
+			$('#upload_choose').upload('/upload',
+				function(res) {
+					
+				},
+				'html'
+			);
+		});
+	})
+</script>
+{% endblock script %}
+{% block body %}
+  <h2>Upload</h2>
+  <dl>
+    <dt>Choose:
+    <dd><input type="file" name="file" enctype="multipart/form-data" value="Choose" id="upload_choose">
+	<dd><input type="button" value="Upload!" id="upload_button">
+  </dl>
+{% endblock body %}
