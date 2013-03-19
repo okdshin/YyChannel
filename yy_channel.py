@@ -1,4 +1,5 @@
 import os
+import hashlib
 import flask
 import flask.ext.login as login
 import werkzeug
@@ -11,6 +12,7 @@ app = flask.Flask(__name__)
 app.config.update(
     DATABASE_URI = 'sqlite:///yy_channel.db',
     SECRET_KEY = 'test key',#os.urandom(24),
+    UPLOADED_FILES_DIRECTORY = './uploaded_files/',
     DEBUG = True
 )
 
@@ -69,26 +71,43 @@ def load_token(token):
 def unauthorized():
     return flask.redirect(flask.url_for('login'))
 
-UPLOAD_FOLDER = './uploaded_files/'
 
 class File(Base):
     __tablename__ = 'files'
-    path = Column(String, primary_key=True)
+    id = Column(String, primary_key=True)
     name = Column(String)
     extension = Column(String)
     uploader_id = Column(String)
 
-    def __init__(self, path, name, extension, uploader_id):
-        self.path = path
+    def __init__(self, id, name, extension, uploader_id):
+        self.id = id
         self.name = name
         self.extension = extension
         self.uploader_id = uploader_id
 
+    def get_id(self):
+        return self.id
+
+    def get_name(self):
+        return self.name
+
+    def get_extension(self):
+        return self.extension
+
+    def get_uploader_id(self):
+        return self.uploader_id
+
 @app.route('/')
-@app.route('/index')
+def slash():
+    return flask.redirect(flask.url_for('index'))
+
+@app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    return flask.render_template('index.html')
+    if flask.request.method == 'POST' and 'fileid' in flask.request.form:
+        return flask.render_template('view.html', file=file)
+    files = File.query.order_by(File.id)
+    return flask.render_template('index.html', files=files)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -106,14 +125,14 @@ def upload():
     if flask.request.method == 'POST':
         file = flask.request.files['file']
         if file:
-            filename = werkzeug.secure_filename(file.filename)
-            fileextension = os.path.splitext(file.filename)[1]
-            print fileextension
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            unsafe_filename, fileextension = os.path.splitext(file.filename)
+            filename = werkzeug.secure_filename(unsafe_filename)
+            uploader_id = flask.ext.login.current_user.get_id()
+            fileid = hashlib.md5(uploader_id+filename+fileextension).hexdigest()
             try:
-                db_session.add(File(filepath, filename, fileextension, flask.ext.login.current_user.get_id()))
+                db_session.add(File(fileid, filename, fileextension, flask.ext.login.current_user.get_id()))
                 db_session.commit()
-                file.save(filepath)
+                file.save(os.path.join(app["UPLOADED_FILES_DIRECTORY"], fileid))
             except:
                 print 'Same id file exists.'
             return flask.render_template("uploaded.html",)
