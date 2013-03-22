@@ -2,4 +2,3 @@
 *.pyc
 *.db
 uploaded_files/*
-env/*
