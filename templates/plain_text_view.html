@@ -8,4 +8,7 @@
 {% endblock script %}
 {% block body2 %}
 <h2>Welcome</h2>
+{% autoescape false %}
+{{ contents | e | replace("\n", "<br />\n") }}
+{% endautoescape %}
 {% endblock body2 %}

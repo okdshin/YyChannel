@@ -1,12 +1,32 @@
 {% extends "layout.html" %}
 {% block script %}
 <script type="text/javascript" src={{ url_for('static', filename='jquery-1.9.1.min.js')}}></script>
+<script type="text/javascript" src={{ url_for('static', filename='json2.js')}}></script>
 <script type="text/javascript">
+/*
 	$(function() {
 		$('.view_link').click(function(){
-			$.post('index', {'fileid':$('this').attr('fileid')})
+			var fileid = $(this).attr('fileid');
+			console.log(fileid);
+			var data = {'fileid':fileid};
+			var stringified_data = JSON.stringify(data);
+
+			$.ajax({
+				type: 'GET',
+				url: '/view',
+				data: stringified_data,
+				contentType: 'application/json',
+				success: function(message) {
+					console.log(message);
+				},
+				error: function(message) {
+					console.log('error');
+					console.log(message);
+				}
+			}); 
 		});
 	})
+*/
 </script>
 {% endblock script %}
 {% block body %}
@@ -14,6 +34,6 @@
 <p>This Web site is "YY channel Prototype" page.
 <p><a href="{{ url_for('upload') }}">upload</a>
 {% for file in files %}
-<div class="view_link" fileid="{{ file.get_id() }}">{{ file.get_name() }}</div>
+<a class="view_link" href="/view?fileid={{ file.get_id() }}" fileid="{{ file.get_id() }}">{{ file.get_name() }}</a>
 {% endfor %}
 {% endblock body %}

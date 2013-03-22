@@ -13,6 +13,8 @@ app.config.update(
     DATABASE_URI = 'sqlite:///yy_channel.db',
     SECRET_KEY = 'test key',#os.urandom(24),
     UPLOADED_FILES_DIRECTORY = './uploaded_files/',
+    PLAIN_TEXT_EXTENSIONS = ['.txt'],
+    MOVIE_EXTENSIONS = ['.flv'],
     DEBUG = True
 )
 
@@ -79,6 +81,9 @@ class File(Base):
     extension = Column(String)
     uploader_id = Column(String)
 
+    def __str__(self):
+        return '{{File {id}, {name}, {ext}, {uid}}}'.format(id=self.id, name=self.name, ext=self.extension, uid=self.uploader_id)
+
     def __init__(self, id, name, extension, uploader_id):
         self.id = id
         self.name = name
@@ -101,13 +106,33 @@ class File(Base):
 def slash():
     return flask.redirect(flask.url_for('index'))
 
-@app.route('/index', methods=['GET', 'POST'])
+@app.route('/index')
 @login_required
 def index():
-    if flask.request.method == 'POST' and 'fileid' in flask.request.form:
-        return flask.render_template('view.html', file=file)
     files = File.query.order_by(File.id)
     return flask.render_template('index.html', files=files)
+
+@app.route('/view')
+@login_required
+def view():
+    print "request.args['fileid']:", flask.request.args['fileid']
+    fileid = flask.request.args.get('fileid', '')
+    if not fileid is '':
+        try:
+            file = File.query.filter_by(id=fileid).first()
+            print file
+            #print app['PLAIN_TEXT_EXTENSIONS']
+            print file.get_extension()
+            if file.get_extension() in app.config['PLAIN_TEXT_EXTENSIONS']:
+                file_path = os.path.join(app.config["UPLOADED_FILES_DIRECTORY"], file.get_id())
+                contents = open(file_path, "r").read()#.replace('\n', '<br />')
+                return flask.render_template('plain_text_view.html', file=file, contents=contents)
+        except:
+            #raise
+            flask.flash("InvalidFileId")
+            pass
+    return flask.redirect('index')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -132,7 +157,7 @@ def upload():
             try:
                 db_session.add(File(fileid, filename, fileextension, flask.ext.login.current_user.get_id()))
                 db_session.commit()
-                file.save(os.path.join(app["UPLOADED_FILES_DIRECTORY"], fileid))
+                file.save(os.path.join(app.config["UPLOADED_FILES_DIRECTORY"], fileid))
             except:
                 print 'Same id file exists.'
             return flask.render_template("uploaded.html",)
