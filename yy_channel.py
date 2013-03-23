@@ -10,10 +10,10 @@ from sqlalchemy.ext.declarative import declarative_base
 
 app = flask.Flask(__name__)
 app.config.update(
-    DATABASE_URI = 'sqlite:///yy_channel.db',
+    DATABASE_URI = 'sqlite:////home/okada/YyChannel/yy_channel.db',
     SECRET_KEY = 'test key',#os.urandom(24),
-    UPLOADED_FILES_DIRECTORY = './uploaded_files/',
-    PLAIN_TEXT_EXTENSIONS = ['.txt'],
+    UPLOADED_FILES_DIRECTORY = '/home/okada/YyChannel/uploaded_files/',
+    PLAIN_TEXT_EXTENSIONS = ['.txt', 'py'],
     MOVIE_EXTENSIONS = ['.flv'],
     DEBUG = True
 )
@@ -120,9 +120,6 @@ def view():
     if not fileid is '':
         try:
             file = File.query.filter_by(id=fileid).first()
-            print file
-            #print app['PLAIN_TEXT_EXTENSIONS']
-            print file.get_extension()
             if file.get_extension() in app.config['PLAIN_TEXT_EXTENSIONS']:
                 file_path = os.path.join(app.config["UPLOADED_FILES_DIRECTORY"], file.get_id())
                 contents = open(file_path, "r").read()#.replace('\n', '<br />')
@@ -159,8 +156,9 @@ def upload():
                 db_session.commit()
                 file.save(os.path.join(app.config["UPLOADED_FILES_DIRECTORY"], fileid))
             except:
-                print 'Same id file exists.'
-            return flask.render_template("uploaded.html",)
+                flask.flash("SameIdFileAlreadyExists")
+            #return flask.redirect(flask.url_for("upload.html"))
+            return flask.render_template("uploaded.html")
     return flask.render_template("upload.html")
 
 @app.route('/login', methods=['GET', 'POST'])
