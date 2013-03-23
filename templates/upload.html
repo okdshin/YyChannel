@@ -5,7 +5,7 @@
 <script type="text/javascript">
 	$(function() {
 		$('#upload_button').click(function(){
-			$('#upload_choose').upload('/yy_channel/upload',
+			$('#upload_choose').upload('{{ url_for('upload') }}',
 				function(res) {
 					
 				},

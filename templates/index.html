@@ -34,6 +34,6 @@
 <p>This Web site is "YY channel Prototype" page.
 <p><a href="{{ url_for('upload') }}">upload</a>
 {% for file in files %}
-<a class="view_link" href="/yy_channel/view?fileid={{ file.get_id() }}" fileid="{{ file.get_id() }}">{{ file.get_name() }}</a>
+<a class="view_link" href="{{ url_for('view') }}?fileid={{ file.get_id() }}" fileid="{{ file.get_id() }}">{{ file.get_name() }}</a>
 {% endfor %}
 {% endblock body %}

@@ -13,7 +13,7 @@ app.config.update(
     DATABASE_URI = 'sqlite:////home/okada/YyChannel/yy_channel.db',
     SECRET_KEY = 'test key',#os.urandom(24),
     UPLOADED_FILES_DIRECTORY = '/home/okada/YyChannel/uploaded_files/',
-    PLAIN_TEXT_EXTENSIONS = ['.txt', 'py'],
+    PLAIN_TEXT_EXTENSIONS = ['.txt', '.py'],
     MOVIE_EXTENSIONS = ['.flv'],
     DEBUG = True
 )
