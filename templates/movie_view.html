@@ -1,0 +1,15 @@
+{% extends "common_view.html" %}
+{% block script %}
+<script type="text/javascript" src={{ url_for('static', filename='jquery-1.9.1.min.js') }}></script>
+<script type="text/javascript">
+	$(function() {
+	})
+</script>
+{% endblock script %}
+{% block body2 %}
+<h2>Welcome</h2>
+<object type="application/x-shockwave-flash" data="{{ url_for('static', filename='flv_player.swf') }}" width="640" height="480">
+	<param name="movie" value="{{ url_for('static', filename='flv_player.swf') }}" />
+	<param name="FlashVars" value="flv=/uploaded_files/{{ file.get_id() }}&amp;startimage=/uploaded_files/wirelessia_logo.jpg" />
+</object>
+{% endblock body2 %}
