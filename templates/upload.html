@@ -5,7 +5,8 @@
 <script type="text/javascript">
 	$(function() {
 		$('#upload_button').click(function(){
-			$('#upload_choose').upload('/upload',
+			$('#fields').upload('{{ url_for('upload') }}',
+				//{'filename':$('#filename_input'), 'uploader_comment':$('#uploader_comment_input')},
 				function(res) {
 					
 				},
@@ -17,9 +18,17 @@
 {% endblock script %}
 {% block body %}
   <h2>Upload</h2>
+<form action="#" method="post">
+  <div id="fields">
   <dl>
     <dt>Choose:
     <dd><input type="file" name="file" enctype="multipart/form-data" value="Choose" id="upload_choose">
-	<dd><input type="button" value="Upload!" id="upload_button">
+	<dt>Title
+	<dd><input type="text" name="title" id="title_input">
+	<dt>UploaderComment
+	<dd><input type="text" name="uploader_comment" id="uploader_comment_input">
   </dl>
+  </div>
+  <input type="button" value="Upload!" id="upload_button">
+</form>
 {% endblock body %}
