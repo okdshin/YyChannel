@@ -10,11 +10,13 @@ from sqlalchemy import create_engine, sql, Column, Integer, String, Boolean
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
+SELF_HOME_PATH = os.path.dirname(os.path.abspath(__file__))
+
 app = flask.Flask(__name__)
 app.config.update(
-    DATABASE_URI = 'sqlite:////home/okada/YyChannel/yy_channel.db',
+    DATABASE_URI = 'sqlite:////home/okada/www/YyChannel/yy_channel.db',
     SECRET_KEY = 'test key',#os.urandom(24),
-    UPLOADED_FILES_DIRECTORY = '/home/okada/YyChannel/uploaded_files/',
+    UPLOADED_FILES_DIRECTORY = '/home/okada/www/YyChannel/uploaded_files/',
     PLAIN_TEXT_EXTENSIONS = ['', '.txt', '.py'],
     MOVIE_EXTENSIONS = ['.swf', '.flv', '.mp4'],
     DEBUG = True
@@ -179,8 +181,8 @@ def view():
             file = File.query.filter_by(id=fileid).first()
             if file.get_extension() in app.config['PLAIN_TEXT_EXTENSIONS']:
                 file_path = os.path.join(app.config["UPLOADED_FILES_DIRECTORY"], file.get_id())
-                contents = open(file_path, "r").read()#.replace('\n', '<br />')
-                return flask.render_template('plain_text_view.html', file=file, contents=contents)
+                contents = open(file_path, "r").read()
+                return flask.render_template('plain_text_view.html', file=file, contents=unicode(contents, 'utf-8'))
             if file.get_extension() in app.config['MOVIE_EXTENSIONS']:
                 return flask.render_template('movie_view.html', file=file)
         except:
@@ -206,15 +208,17 @@ def upload():
     if flask.request.method == 'POST':
         file_in_request = flask.request.files['file']
         if file_in_request:
-            uploader_comment = flask.request.form.get('uploader_comment', '(no uploader\'s comment)')
-            #uploader_comment = flask.request.form['uploader_comment']
+            uploader_comment = flask.request.form.get('uploader_comment', u'(no uploader\'s comment)')
+            if uploader_comment is u'':
+                uploader_comment = u'(no uploader\'s comment)'
             unsafe_origin_filename, fileextension = os.path.splitext(file_in_request.filename)
-            unsafe_filename = flask.request.form.get('title', unsafe_origin_filename)
-            #unsafe_filename = flask.request.form['filename']
-            filename = werkzeug.secure_filename(unsafe_filename)
+            filename = flask.request.form.get('title', unsafe_origin_filename)
+            if filename is u'':
+                filename = unsafe_origin_filename
+
             uploader_id = flask.ext.login.current_user.get_id()
             content = file_in_request.stream.read().encode('hex')
-            fileid = hashlib.md5(uploader_id+filename+fileextension+content).hexdigest()
+            fileid = hashlib.md5(uploader_id+'filename+fileextension'+content).hexdigest()
             file = File(fileid, filename, fileextension, flask.ext.login.current_user.get_id(), uploader_comment, 'wirelessia_logo.jpg')
             try:
                 same_count = File.query.filter_by(id=file.get_id()).count()
