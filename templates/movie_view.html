@@ -10,6 +10,6 @@
 <h2>Welcome</h2>
 <object type="application/x-shockwave-flash" data="{{ url_for('static', filename='flv_player.swf') }}" width="640" height="480">
 	<param name="movie" value="{{ url_for('static', filename='flv_player.swf') }}" />
-	<param name="FlashVars" value="flv=/uploaded_files/{{ file.get_id() }}&amp;startimage=/uploaded_files/wirelessia_logo.jpg" />
+	<param name="FlashVars" value="flv={{ absolute_file_path }}&amp;startimage=/uploaded_files/wirelessia_logo.jpg" />
 </object>
 {% endblock body2 %}

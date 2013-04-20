@@ -14,10 +14,15 @@ SELF_HOME_PATH = os.path.dirname(os.path.abspath(__file__))
 
 app = flask.Flask(__name__)
 app.config.update(
-    DATABASE_URI = 'sqlite:////home/okada/www/YyChannel/yy_channel.db',
+    #DATABASE_URI = 'sqlite:////home/okada/www/YyChannel/yy_channel.db',
+    DATABASE_URI = 'sqlite:////'+SELF_HOME_PATH+'/yy_channel.db',
     SECRET_KEY = 'test key',#os.urandom(24),
-    UPLOADED_FILES_DIRECTORY = '/home/okada/www/YyChannel/uploaded_files/',
+    #UPLOADED_FILES_DIRECTORY = '/home/okada/www/YyChannel/uploaded_files/',
+    UPLOADED_FILES_DIRECTORY = SELF_HOME_PATH+'/uploaded_files/',
     PLAIN_TEXT_EXTENSIONS = ['', '.txt', '.py'],
+    HTML_EXTENSIONS = ['odt'],
+    SOUND_EXTENSIONS = [],
+    BINARY_EXTENSIONS = [],
     MOVIE_EXTENSIONS = ['.swf', '.flv', '.mp4'],
     DEBUG = True
 )
@@ -34,10 +39,14 @@ class User(Base):
     __tablename__ = 'users'
     id = Column(String, primary_key=True)
     active = Column(Boolean)
+    hashed_password = Column(String)
+    name = Column(String)
 
-    def __init__(self, id, active=True):
+    def __init__(self, id, hashed_password, name, active=True):
         self.id = id
         self.active = active
+        self.hashed_password = hashed_password
+        self.name = name
 
     def is_authenticated(self):
         return True
@@ -50,6 +59,12 @@ class User(Base):
 
     def get_id(self):
         return self.id
+
+    def get_hashed_password(self):
+        return self.hashed_password
+
+    def get_name(self):
+        return self.name
     """
     def get_auth_token(self):
         #return login.make_secure_token(self.name)
@@ -127,6 +142,9 @@ class File(Base):
     def get_view_count(self):
         return self.view_count
 
+    def increment_view_count(self):
+        self.view_count = self.view_count + 1
+
 class FileTag(Base):
     __tablename__ = 'file_tags'
     text = Column(String, primary_key=True)
@@ -179,28 +197,41 @@ def view():
     if not fileid is '':
         try:
             file = File.query.filter_by(id=fileid).first()
+            file.increment_view_count()
+            db_session.commit()
             if file.get_extension() in app.config['PLAIN_TEXT_EXTENSIONS']:
                 file_path = os.path.join(app.config["UPLOADED_FILES_DIRECTORY"], file.get_id())
-                contents = open(file_path, "r").read()
-                return flask.render_template('plain_text_view.html', file=file, contents=unicode(contents, 'utf-8'))
+                contents = unicode(open(file_path, "r").read(), 'utf_8')
+                return flask.render_template('plain_text_view.html', file=file, contents=contents)
+            if file.get_extension() in app.config['HTML_EXTENSIONS']:
+                return flask.render_template('html_view.html', file=file)
             if file.get_extension() in app.config['MOVIE_EXTENSIONS']:
-                return flask.render_template('movie_view.html', file=file)
+                return flask.render_template('movie_view.html', file=file, 
+                    absolute_file_path=os.path.join(app.config['UPLOADED_FILES_DIRECTORY'],file.get_id()))
         except:
             raise
             flask.flash("InvalidFileId")
-            pass
     return flask.redirect('index')
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if flask.request.method == 'POST' and 'email' in flask.request.form:
+    if flask.request.method == 'POST' and 'email' and 'password' and 'name' in flask.request.form:
         id = flask.request.form['email']
-        db_session.add(User(id))
+        hashed_password = flask.request.form['password'] # todo
+        name = flask.request.form['name']
+        db_session.add(User(id, hashed_password, name))
         db_session.commit()
         return flask.redirect(flask.url_for('login'))
     return flask.render_template('register.html')
 
+@app.route('/user', methods=['GET', 'POST'])
+@login_required
+def user():
+    if flask.request.method == 'POST':
+        return flask.redirect(flask.url_for('login'))
+    user = flask.ext.login.current_user
+    return flask.render_template('user.html')
 
 @app.route("/upload", methods=['GET', 'POST'])
 @login_required
@@ -224,6 +255,7 @@ def upload():
                 same_count = File.query.filter_by(id=file.get_id()).count()
                 if same_count is not 0:
                     raise
+                    
                 db_session.add(file)
                 db_session.commit()
                 file_in_request.seek(0,0)
@@ -240,8 +272,9 @@ def upload():
 def login():
     if flask.request.method == 'POST' and 'email' in flask.request.form:
         id = flask.request.form['email']
+        password = flask.request.form['password']
         user = User.query.filter_by(id=id).first()
-        if not user == None:
+        if not user == None and user.get_hashed_password() == password:
             if login_user(user, remember=True):
                 return flask.redirect(flask.request.args.get('next') or flask.url_for('index'))
     return flask.render_template('login.html')
