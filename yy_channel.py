@@ -18,12 +18,13 @@ app.config.update(
     SECRET_KEY = 'test key',#os.urandom(24),
     UPLOADED_FILES_DIRECTORY = SELF_HOME_PATH+'/uploaded_files/',
     #UPLOADED_FILES_DIRECTORY = os.path.join(SELF_HOME_PATH, '/uploaded_files/'),
-    UPLOADED_MEDIA_FILES_PARENT_URI = '/uploaded_files/',
+    #UPLOADED_MEDIA_FILES_PARENT_URI = '/uploaded_files/',
+    UPLOADED_MEDIA_FILES_PARENT_URI = SELF_HOME_PATH+'/uploaded_files/',
     PLAIN_TEXT_EXTENSIONS = ['', '.txt', '.py'],
-    HTML_EXTENSIONS = ['odt'],
+    HTML_EXTENSIONS = ['.odt'],
     SOUND_EXTENSIONS = [],
     BINARY_EXTENSIONS = [],
-    MOVIE_EXTENSIONS = ['.swf', '.flv', '.mp4'],
+    MOVIE_EXTENSIONS = ['.swf', '.flv', '.mp4', '.mov'],
     DEBUG = True
 )
 
@@ -111,7 +112,7 @@ class File(Base):
     def __init__(self, id, name, extension, uploader_id, uploader_comment, image_id):
         self.id = id
         self.name = name
-        self.extension = extension
+        self.extension = extension.lower()
         self.uploader_id = uploader_id
         self.uploader_comment = uploader_comment
         self.upload_date = datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S")
@@ -204,10 +205,17 @@ def view():
                 contents = unicode(open(file_path, "r").read(), 'utf_8')
                 return flask.render_template('plain_text_view.html', file=file, contents=contents)
             if file.get_extension() in app.config['HTML_EXTENSIONS']:
-                return flask.render_template('html_view.html', file=file)
+                file_path = os.path.join(app.config["UPLOADED_FILES_DIRECTORY"], file.get_id())+'.htm'
+                if os.path.exists(file_path):
+                    contents = unicode(open(file_path, "r").read(), 'utf_8')
+                    return flask.render_template('html_view.html', file=file, contents=contents)
+                else:
+                    flask.flash("HtmlVersion not found.")
+                    return flask.redirect(flask.url_for('index'))
             if file.get_extension() in app.config['MOVIE_EXTENSIONS']:
                 return flask.render_template('movie_view.html', file=file, 
                     media_file_uri=os.path.join(app.config['UPLOADED_MEDIA_FILES_PARENT_URI'],file.get_id()))
+            flask.flash("Invalid file type.")
         except:
             raise
             flask.flash("InvalidFileId")
