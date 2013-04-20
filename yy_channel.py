@@ -14,11 +14,11 @@ SELF_HOME_PATH = os.path.dirname(os.path.abspath(__file__))
 
 app = flask.Flask(__name__)
 app.config.update(
-    #DATABASE_URI = 'sqlite:////home/okada/www/YyChannel/yy_channel.db',
     DATABASE_URI = 'sqlite:////'+SELF_HOME_PATH+'/yy_channel.db',
     SECRET_KEY = 'test key',#os.urandom(24),
-    #UPLOADED_FILES_DIRECTORY = '/home/okada/www/YyChannel/uploaded_files/',
     UPLOADED_FILES_DIRECTORY = SELF_HOME_PATH+'/uploaded_files/',
+    #UPLOADED_FILES_DIRECTORY = os.path.join(SELF_HOME_PATH, '/uploaded_files/'),
+    UPLOADED_MEDIA_FILES_PARENT_URI = '/uploaded_files/',
     PLAIN_TEXT_EXTENSIONS = ['', '.txt', '.py'],
     HTML_EXTENSIONS = ['odt'],
     SOUND_EXTENSIONS = [],
@@ -207,7 +207,7 @@ def view():
                 return flask.render_template('html_view.html', file=file)
             if file.get_extension() in app.config['MOVIE_EXTENSIONS']:
                 return flask.render_template('movie_view.html', file=file, 
-                    absolute_file_path=os.path.join(app.config['UPLOADED_FILES_DIRECTORY'],file.get_id()))
+                    media_file_uri=os.path.join(app.config['UPLOADED_MEDIA_FILES_PARENT_URI'],file.get_id()))
         except:
             raise
             flask.flash("InvalidFileId")
@@ -260,6 +260,10 @@ def upload():
                 db_session.commit()
                 file_in_request.seek(0,0)
                 file_in_request.save(os.path.join(app.config["UPLOADED_FILES_DIRECTORY"], fileid))
+                if file.get_extension() == '.odt':
+                    file_path = os.path.join(app.config['UPLOADED_FILES_DIRECTORY'], file.get_id())
+                    os.system('libreoffice --headless --convert-to htm:HTML {odt_file} --outdir {out_dir}'.format(odt_file=file_path, out_dir=app.config['UPLOADED_FILES_DIRECTORY']))
+
             except:
                 raise
                 flask.flash("SameIdFileAlreadyExists")
