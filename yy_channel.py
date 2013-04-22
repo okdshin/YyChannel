@@ -23,7 +23,7 @@ app.config.update(
     PLAIN_TEXT_EXTENSIONS = ['', '.txt', '.py'],
     HTML_EXTENSIONS = ['.odt'],
     SOUND_EXTENSIONS = [],
-    BINARY_EXTENSIONS = [],
+    BINARY_EXTENSIONS = ['.zip', '.tar.gz', '.exe'],
     MOVIE_EXTENSIONS = ['.swf', '.flv', '.mp4', '.mov'],
     DEBUG = True
 )
@@ -214,6 +214,9 @@ def view():
                     return flask.redirect(flask.url_for('index'))
             if file.get_extension() in app.config['MOVIE_EXTENSIONS']:
                 return flask.render_template('movie_view.html', file=file, 
+                    media_file_uri=os.path.join(app.config['UPLOADED_MEDIA_FILES_PARENT_URI'],file.get_id()))
+            if file.get_extension() in app.config['BINARY_EXTENSIONS']:
+                return flask.render_template('binary_view.html', file=file, 
                     media_file_uri=os.path.join(app.config['UPLOADED_MEDIA_FILES_PARENT_URI'],file.get_id()))
             flask.flash("Invalid file type.")
         except:
