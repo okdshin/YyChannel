@@ -189,7 +189,7 @@ def slash():
 @login_required
 def index():
     files = File.query.order_by(File.id)
-    return flask.render_template('index.html', files=files)
+    return flask.render_template('index.html', day="20130424", top_comment=u"hello world", files=files)
 
 @app.route('/view')
 @login_required
