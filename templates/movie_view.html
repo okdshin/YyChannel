@@ -7,9 +7,10 @@
 </script>
 {% endblock script %}
 {% block body2 %}
-<h2>Welcome</h2>
+<video src="{{ media_file_uri }}" width="640" height="480" controls>
 <object type="application/x-shockwave-flash" data="{{ url_for('static', filename='flv_player.swf') }}" width="640" height="480">
 	<param name="movie" value="{{ url_for('static', filename='flv_player.swf') }}" />
 	<param name="FlashVars" value="flv={{ media_file_uri }}&amp;startimage=/uploaded_files/wirelessia_logo.jpg" />
 </object>
+</video>
 {% endblock body2 %}

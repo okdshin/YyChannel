@@ -194,7 +194,6 @@ def index():
 @app.route('/view')
 @login_required
 def view():
-    print "request.args['fileid']:", flask.request.args['fileid']
     fileid = flask.request.args.get('fileid', '')
     if not fileid is '':
         try:
@@ -203,8 +202,9 @@ def view():
             db_session.commit()
             if file.get_extension() in app.config['PLAIN_TEXT_EXTENSIONS']:
                 file_path = os.path.join(app.config["UPLOADED_FILES_DIRECTORY"], file.get_id())
-                contents = unicode(open(file_path, "r").read(), 'utf_8')
-                return flask.render_template('plain_text_view.html', file=file, contents=contents)
+                #contents = unicode(open(file_path, "r").read(), 'utf_8')
+                contents = unicode(open(file_path, "r").read().decode('utf-8'))
+                return flask.render_template('plain_text_view.html', file=file, contents=contents.decode('utf-8'))
             if file.get_extension() in app.config['HTML_EXTENSIONS']:
                 file_path = os.path.join(app.config["UPLOADED_FILES_DIRECTORY"], file.get_id())+'.htm'
                 if os.path.exists(file_path):
