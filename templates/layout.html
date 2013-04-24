@@ -1,12 +1,12 @@
 <!doctype html>
 <head>
-<title>YY channel</title>
+<title>OkOk channel(仮)</title>
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
 {% block script %}{% endblock %}
 </head>
 <body>
 <div class=page>
-  <a href="{{ url_for('index') }}" style="text-decoration:none;"><h1>YY channel PROTOTYPE</h1></a>
+  <a href="{{ url_for('index') }}" style="text-decoration:none;"><h1>OkOk channel PROTOTYPE</h1></a>
   <div class=metanav>
   {% if current_user.is_authenticated() %}
     Welcome, {{ current_user.name }} | <a href="{{ url_for('logout') }}">log out</a>

@@ -19,12 +19,13 @@ app.config.update(
     UPLOADED_FILES_DIRECTORY = SELF_HOME_PATH+'/uploaded_files/',
     #UPLOADED_FILES_DIRECTORY = os.path.join(SELF_HOME_PATH, '/uploaded_files/'),
     #UPLOADED_MEDIA_FILES_PARENT_URI = '/uploaded_files/',
-    UPLOADED_MEDIA_FILES_PARENT_URI = SELF_HOME_PATH+'/uploaded_files/',
+    UPLOADED_MEDIA_FILES_PARENT_URI = '/uploaded_files/',
     PLAIN_TEXT_EXTENSIONS = ['', '.txt', '.py'],
     HTML_EXTENSIONS = ['.odt'],
     SOUND_EXTENSIONS = [],
-    BINARY_EXTENSIONS = ['.zip', '.tar.gz', '.exe'],
+    BINARY_EXTENSIONS = ['.zip', '.gz', '.exe'],
     MOVIE_EXTENSIONS = ['.swf', '.flv', '.mp4', '.mov'],
+    HASH_BASE_FILE_CONTENT_SIZE = 100 * 1000,
     DEBUG = True
 )
 
@@ -215,10 +216,10 @@ def view():
             if file.get_extension() in app.config['MOVIE_EXTENSIONS']:
                 return flask.render_template('movie_view.html', file=file, 
                     media_file_uri=os.path.join(app.config['UPLOADED_MEDIA_FILES_PARENT_URI'],file.get_id()))
-            if file.get_extension() in app.config['BINARY_EXTENSIONS']:
-                return flask.render_template('binary_view.html', file=file, 
-                    media_file_uri=os.path.join(app.config['UPLOADED_MEDIA_FILES_PARENT_URI'],file.get_id()))
-            flask.flash("Invalid file type.")
+            #if file.get_extension() in app.config['BINARY_EXTENSIONS']:
+            return flask.render_template('binary_view.html', file=file, 
+                media_file_uri=os.path.join(app.config['UPLOADED_MEDIA_FILES_PARENT_URI'],file.get_id()))
+            #flask.flash("Invalid file type.")
         except:
             raise
             flask.flash("InvalidFileId")
@@ -259,7 +260,7 @@ def upload():
                 filename = unsafe_origin_filename
 
             uploader_id = flask.ext.login.current_user.get_id()
-            content = file_in_request.stream.read().encode('hex')
+            content = file_in_request.stream.read(app.config['HASH_BASE_FILE_CONTENT_SIZE']).encode('hex')
             fileid = hashlib.md5(uploader_id+'filename+fileextension'+content).hexdigest()
             file = File(fileid, filename, fileextension, flask.ext.login.current_user.get_id(), uploader_comment, 'wirelessia_logo.jpg')
             try:
